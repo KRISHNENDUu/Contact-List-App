@@ -1,41 +1,74 @@
 import { useState, useEffect } from 'react';
-import ContactCard from './components/ContactCard';
-import SearchBar from './components/SearchBar';
-import AddContactForm from './components/AddContactForm';
-import { mockContacts } from './data/contacts';
+import ContactCard from './components/ContactCard'; // [cite: krishnenduu/contact-list-app/.../ContactCard.jsx]
+import SearchBar from './components/SearchBar'; // [cite: krishnenduu/contact-list-app/.../SearchBar.jsx]
+import AddContactForm from './components/AddContactForm'; // [cite: krishnenduu/contact-list-app/.../AddContactForm.jsx]
+import { mockContacts } from './data/contacts'; // [cite: krishnenduu/contact-list-app/.../contacts.js]
 import { Users, UserCircle } from 'lucide-react';
 
+// Key for localStorage
+const LOCAL_STORAGE_KEY = 'addedContacts';
+
+// Helper function to load initial contacts from localStorage
+const loadInitialContacts = () => {
+  let storedContacts = [];
+  try {
+    const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (storedData) {
+      storedContacts = JSON.parse(storedData);
+    }
+    // Ensure that storedContacts is always an array
+    if (!Array.isArray(storedContacts)) {
+        storedContacts = [];
+    }
+  } catch (error) {
+    console.error("Failed to parse contacts from localStorage:", error);
+    localStorage.removeItem(LOCAL_STORAGE_KEY); // Remove bad data
+    storedContacts = [];
+  }
+  // Combine stored contacts (newest first) and mock contacts
+  return [...storedContacts, ...mockContacts];
+};
+
+
 function App() {
-  const [contacts, setContacts] = useState([]);
+  // Initialize useState with the initial value loaded from localStorage
+  const [contacts, setContacts] = useState(loadInitialContacts); 
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
+  // No need for a loading state since data is already in initial state
+  // const [loading, setLoading] = useState(false); // can be removed or set false
 
+  // Save *only added* contacts to localStorage whenever the contacts state changes
   useEffect(() => {
-    const fetchContacts = async () => {
-      setLoading(true);
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setContacts(mockContacts);
-      setLoading(false);
-    };
+    // Filter out mockContacts based on ID
+    const addedContacts = contacts.filter(contact => 
+      !mockContacts.some(mockContact => mockContact.id === contact.id)
+    );
 
-    fetchContacts();
-  }, []);
+    try {
+      // Store only added contacts array as JSON string
+      // Save in reverse order so the order remains correct while loading
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(addedContacts));
+    } catch (error) {
+      console.error("Failed to save contacts to localStorage:", error);
+    }
+  }, [contacts]); // This effect runs when 'contacts' state changes
 
-  const handleAddContact = (newContact) => {
-    const contact = {
-      // Use a more robust ID, like crypto.randomUUID() for a real app
-      id: crypto.randomUUID(), 
-      ...newContact
+  // Handler to add a new contact
+  const handleAddContact = (newContactData) => {
+    const newContact = {
+      id: crypto.randomUUID(), // Generate a unique ID
+      ...newContactData
     };
-    // Add new contacts to the top
-    setContacts([contact, ...contacts]);
+    // Add new contact at the beginning of the current list
+    setContacts(prevContacts => [newContact, ...prevContacts]); 
   };
 
+  // Filter contacts based on search term
   const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // --- JSX Rendering (no changes needed below) ---
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 overflow-hidden">
       {/* Decorative background elements */}
@@ -45,7 +78,7 @@ function App() {
         <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob [animation-delay:'4s']"></div>
       </div>
 
-      {/* Main Container - Improved responsive layout */}
+      {/* Main Container */}
       <div className="relative w-full max-w-3xl mx-auto px-4 py-12 sm:py-20 z-10">
         
         {/* Header Card */}
@@ -63,23 +96,17 @@ function App() {
               </p>
             </div>
           </div>
-
-          {/* Search Bar */}
-          <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+          <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} /> {/* [cite: krishnenduu/contact-list-app/.../SearchBar.jsx] */}
         </div>
 
         {/* Contacts List Container */}
         <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
           
-          {loading ? (
-            <div className="flex flex-col justify-center items-center py-20">
-              <div className="relative">
-                <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200"></div>
-                <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-600 border-t-transparent absolute top-0 left-0"></div>
-              </div>
-              <p className="mt-6 text-gray-600 font-medium animate-pulse">Loading contacts...</p>
-            </div>
-          ) : filteredContacts.length === 0 ? (
+          {/* Loading state can be removed or used when needed */}
+          {/* {loading ? ( ... ) : ... } */}
+
+          {filteredContacts.length === 0 ? (
+            // Empty state (when no contacts or no search results found)
             <div className="text-center py-20 px-6">
               <div className="bg-gradient-to-br from-gray-100 to-gray-200 w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center">
                 <Users className="w-12 h-12 text-gray-400" />
@@ -102,12 +129,12 @@ function App() {
               )}
             </div>
           ) : (
+             // Contact list
             <div className="divide-y divide-gray-100">
-              {/* Search Results Info */}
               {searchTerm && (
                 <div className="px-6 py-3 bg-indigo-50 flex items-center justify-between">
                   <span className="text-sm text-indigo-700 font-medium">
-                    Found {filteredContacts.length} result{filteredContacts.length !== 1 ? 's' : ''}
+                    {filteredContacts.length} results found
                   </span>
                   <button
                     onClick={() => setSearchTerm('')}
@@ -118,15 +145,13 @@ function App() {
                 </div>
               )}
               
-              {/* Contact List */}
               {filteredContacts.map((contact, index) => (
                 <div
-                  key={contact.id}
-                  // Use Tailwind for animation
+                  key={contact.id} // Ensure IDs are unique!
                   className="animate-fadeInUp"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <ContactCard contact={contact} />
+                  <ContactCard contact={contact} /> {/* [cite: krishnenduu/contact-list-app/.../ContactCard.jsx] */}
                 </div>
               ))}
             </div>
@@ -134,15 +159,15 @@ function App() {
         </div>
 
         {/* Footer Info */}
-        {!loading && contacts.length > 0 && (
+        {contacts.length > 0 && (
           <div className="text-center mt-6 text-gray-600 text-sm">
             Showing {filteredContacts.length} of {contacts.length} contacts
           </div>
         )}
       </div>
 
-      {/* Add Contact Button is now a true FAB */}
-      <AddContactForm onAddContact={handleAddContact} />
+      {/* Add Contact Button */}
+      <AddContactForm onAddContact={handleAddContact} /> {/* [cite: krishnenduu/contact-list-app/.../AddContactForm.jsx] */}
     </div>
   );
 }
