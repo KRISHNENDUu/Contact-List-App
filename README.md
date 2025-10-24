@@ -33,8 +33,8 @@
 
 1.  **Clone the Repository:**
     ```bash
-    git clone <your-repo-url>
-    cd <your-repo-folder-name>
+    git clone https://github.com/KRISHNENDUu/Contact-List-App.git
+    cd Contact-List-App
     ```
     *(Replace placeholders with your actual repository URL and folder name)*
 
