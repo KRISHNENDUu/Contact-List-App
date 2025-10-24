@@ -4,7 +4,7 @@
 
 ## Deployed Application
 
-[cite_start]The application is deployed at: **[Your Deployed URL Here]** 
+[cite_start]The application is deployed at: https://contact-list-app-gamma-ten.vercel.app/
 
 ## Features
 
