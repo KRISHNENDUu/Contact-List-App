@@ -1,6 +1,6 @@
 import { Mail, Phone, MessageCircle, Video } from 'lucide-react';
 
-const ContactCard = ({ contact }) => {
+const ContactCard = ({ contact, onActionClick }) => {
   // Generate avatar background colors
   const avatarColors = [
     'from-red-400 to-pink-600',
@@ -78,9 +78,10 @@ const ContactCard = ({ contact }) => {
             </a>
           </div>
           
-          {/* Action Buttons - Moved here */}
+          {/* Action Buttons - Updated onClick handlers */}
           <div className="flex items-center gap-2 pt-2">
             <button 
+              onClick={() => onActionClick(contact, 'call')} // <-- Call handler
               className="flex-1 flex items-center justify-center gap-2 p-2.5 bg-green-100 text-green-700 rounded-xl hover:bg-green-200 transition-colors font-medium text-sm"
               aria-label="Call"
             >
@@ -88,6 +89,7 @@ const ContactCard = ({ contact }) => {
               <span>Call</span>
             </button>
             <button 
+              onClick={() => onActionClick(contact, 'message')} // <-- Call handler
               className="flex-1 flex items-center justify-center gap-2 p-2.5 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors font-medium text-sm"
               aria-label="Message"
             >
@@ -95,6 +97,7 @@ const ContactCard = ({ contact }) => {
               <span>Message</span>
             </button>
             <button 
+              onClick={() => onActionClick(contact, 'video')} // <-- Call handler
               className="flex-1 flex items-center justify-center gap-2 p-2.5 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-colors font-medium text-sm"
               aria-label="Video Call"
             >
